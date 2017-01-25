@@ -6,7 +6,7 @@
 
 #include "thread_pool.hpp"
 
-namespace THREAD_POOL {
+namespace thread_pool {
 
 std::unique_ptr<Semaphore> createSemaphore(uint32_t value) {
     return std::unique_ptr<Semaphore>(new Semaphore(value));

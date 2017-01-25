@@ -7,7 +7,7 @@
 
 #include "thread_pool.hpp"
 
-using namespace THREAD_POOL;
+using namespace thread_pool;
 
 void doSomeCalculations(std::vector<uint32_t>& data) {
     for (uint32_t i = 0; i < data.size() - 1; ++i) {

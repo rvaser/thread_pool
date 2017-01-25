@@ -26,8 +26,8 @@ If you would like to add threadpool to your project, include the thread_pool.hpp
     }
 
     // create thread pool
-    std::shared_ptr<THREAD_POOL::ThreadPool> thread_pool = THREAD_POOL::createThreadPool(); // or pass number of threads you desire
-    // or std::unique_ptr<THREAD_POOL::ThreadPool> ...
+    std::shared_ptr<thread_pool::ThreadPool> thread_pool = thread_pool::createThreadPool(); // or pass number of threads you desire
+    // or std::unique_ptr<thread_pool::ThreadPool> ...
 
     // create storage for return values of function1 and function2
     std::vector<std::future<int>> thread_futures;

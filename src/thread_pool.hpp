@@ -16,7 +16,7 @@
 #include <atomic>
 #include <condition_variable>
 
-namespace THREAD_POOL {
+namespace thread_pool {
 
 class Semaphore;
 std::unique_ptr<Semaphore> createSemaphore(uint32_t value);
