@@ -4,6 +4,8 @@
  * @brief ThreadPool class source file
  */
 
+#include <stdlib.h>
+
 #include "thread_pool.hpp"
 
 namespace thread_pool {
