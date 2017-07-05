@@ -22,7 +22,8 @@ class Semaphore;
 std::unique_ptr<Semaphore> createSemaphore(uint32_t value);
 
 class ThreadPool;
-std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads = std::thread::hardware_concurrency() / 2);
+std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads =
+    std::thread::hardware_concurrency() / 2);
 
 class Semaphore {
 public:

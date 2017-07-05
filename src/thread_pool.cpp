@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 
-#include "thread_pool.hpp"
+#include "thread_pool/thread_pool.hpp"
 
 namespace thread_pool {
 
@@ -16,8 +16,9 @@ std::unique_ptr<Semaphore> createSemaphore(uint32_t value) {
 
 std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads) {
     if (num_threads == 0) {
-        fprintf(stderr, "Invalid number of thread (%d)! Exiting...\n", num_threads);
-        exit(1);
+        fprintf(stderr, "thraed_pool::createThreadPool error: "
+            "invalid number of threads (%d)!\n", num_threads);
+        exit(-1);
     }
     return std::unique_ptr<ThreadPool>(new ThreadPool(num_threads));
 }
