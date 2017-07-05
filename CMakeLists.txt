@@ -16,16 +16,7 @@ target_include_directories(thread_pool PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 if (thread_pool_build_tests)
-    file(COPY test/data DESTINATION ${PROJECT_BINARY_DIR})
-    set(thread_pool_test_data_path ${PROJECT_BINARY_DIR}/data/)
-    configure_file(
-        "${PROJECT_SOURCE_DIR}/test/thread_pool_test_config.h.in"
-        "${PROJECT_BINARY_DIR}/config/thread_pool_test_config.h"
-    )
-    include_directories(${PROJECT_BINARY_DIR}/config)
-
     add_executable(thread_pool_test test/thread_pool_test.cpp)
-
     add_subdirectory(vendor/googletest/googletest EXCLUDE_FROM_ALL)
     target_link_libraries(thread_pool_test thread_pool gtest_main)
 endif(thread_pool_build_tests)
