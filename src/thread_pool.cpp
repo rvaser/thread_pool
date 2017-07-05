@@ -47,6 +47,7 @@ ThreadPool::ThreadPool(uint32_t num_threads) {
     terminate_ = false;
     for (uint32_t i = 0; i < num_threads; ++i) {
         threads_.emplace_back(ThreadPool::worker_thread, this);
+        thread_identifiers_.emplace_back(threads_.back().get_id());
     }
 }
 

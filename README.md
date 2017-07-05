@@ -11,9 +11,24 @@ Application uses following software:
 1. gcc 4.8+ or clang 3.4+
 2. cmake 3.2+
 
-## Usage
+## Instalation
 
-If you would like to add thread_pool to your project, add include the thread_pool.hpp file while compiling, add -std=c++11 to your compiler flag list and -pthread to your linker list.
+CmakeLists is provided in the project root folder. By running the following commands:
+
+```bash
+git clone https://github.com/rvaser/thread_pool thread_pool
+cd thread_pool
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+```
+
+a library named libthread_pool.a will appear in `build/lib` directory. To link the library with your code, add `-Iinclude/ -Lbuild/lib -lthread-pool --std=c++11` while compiling and include `thread_pool/thread_pool.hpp` in your desired source files. Optionally, you can run `sudo make install` to install thread_pool library to your machine and lets you exclude `-Iinclude/ -Lbuild/lib` while compiling.
+
+Alternatively, add the project to your CMakeLists.txt file with the `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool)` commands.
+
+## Usage
 
 For details on how to use the thread pool, please look at the example bellow:
 

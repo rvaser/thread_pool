@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <queue>
+#include <chrono>
 #include <mutex>
 #include <thread>
 #include <future>
@@ -59,6 +60,10 @@ public:
         return threads_.size();
     }
 
+    const std::vector<std::thread::id>& thread_identifiers() const {
+        return thread_identifiers_;
+    }
+
     template<typename T, typename... Ts>
     auto submit_task(T&& routine, Ts&&... params)
         -> std::future<typename std::result_of<T(Ts...)>::type> {
@@ -92,6 +97,7 @@ private:
     static void worker_thread(ThreadPool* thread_pool);
 
     std::vector<std::thread> threads_;
+    std::vector<std::thread::id> thread_identifiers_;
 
     std::queue<std::function<void()>> task_queue_;
 
