@@ -99,6 +99,6 @@ TEST_F(ThreadPoolTest, ThreadIdentifiers) {
 
     EXPECT_EQ(thread_id, thread_identifiers.size());
     for (uint32_t i = 0; i < thread_id; ++i) {
-        EXPECT_EQ(1, thread_identifiers.count(i));
+        EXPECT_EQ(1U, thread_identifiers.count(i));
     }
 }
