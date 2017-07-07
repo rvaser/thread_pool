@@ -1,4 +1,4 @@
-# threadpool
+# Thread pool
 
 ![image](https://travis-ci.org/rvaser/thread_pool.svg?branch=master)
 
