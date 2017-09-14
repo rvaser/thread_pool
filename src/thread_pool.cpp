@@ -57,7 +57,6 @@ ThreadPool::~ThreadPool() {
     for (uint32_t i = 0; i < threads_.size(); ++i) {
         active_sem_->post();
     }
-
     for (auto& it: threads_) {
         it.join();
     }
@@ -66,7 +65,6 @@ ThreadPool::~ThreadPool() {
 void ThreadPool::worker_thread(ThreadPool* thread_pool) {
 
     while (true) {
-
         thread_pool->active_sem_->wait();
 
         if (thread_pool->terminate_) {

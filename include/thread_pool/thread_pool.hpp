@@ -27,7 +27,6 @@ std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads =
 
 class Semaphore {
 public:
-
     ~Semaphore() = default;
 
     uint32_t value() const {
@@ -38,9 +37,7 @@ public:
     void post();
 
     friend std::unique_ptr<Semaphore> createSemaphore(uint32_t value);
-
 private:
-
     Semaphore(uint32_t value);
     Semaphore(const Semaphore&) = delete;
     const Semaphore& operator=(const Semaphore&) = delete;
@@ -52,7 +49,6 @@ private:
 
 class ThreadPool {
 public:
-
     ~ThreadPool();
 
     uint32_t num_threads() const {
@@ -86,9 +82,7 @@ public:
     }
 
     friend std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads);
-
 private:
-
     ThreadPool(uint32_t num_threads);
     ThreadPool(const ThreadPool&) = delete;
     const ThreadPool& operator=(const ThreadPool&) = delete;
