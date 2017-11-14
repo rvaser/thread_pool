@@ -26,9 +26,9 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-a library named libthread_pool.a will appear in `build/lib` directory. To link the library with your code, add `-Iinclude/ -Lbuild/lib -lthread-pool --std=c++11` while compiling and include `thread_pool/thread_pool.hpp` in your desired source files. Optionally, you can run `sudo make install` to install thread_pool library to your machine which lets you exclude `-Iinclude/ -Lbuild/lib` while compiling.
+a library named libthread_pool.a will appear in `build/lib` directory. To link the library with your code, add `-Iinclude/ -Lbuild/lib -lthread_pool -lpthread --std=c++11` while compiling and include `thread_pool/thread_pool.hpp` in your desired source files. Optionally, you can run `sudo make install` to install thread_pool library to your machine which lets you exclude `-Iinclude/ -Lbuild/lib` while compiling.
 
-Alternatively, add the project to your CMakeLists.txt file with the `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool)` commands.
+Alternatively, add the project to your CMakeLists.txt file with `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool)` commands and link your executable with the `pthread` library.
 
 ## Usage
 
