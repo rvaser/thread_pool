@@ -18,7 +18,7 @@ std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads) {
     if (num_threads == 0) {
         fprintf(stderr, "thread_pool::createThreadPool error: "
             "invalid number of threads!");
-        exit(-1);
+        exit(1);
     }
     return std::unique_ptr<ThreadPool>(new ThreadPool(num_threads));
 }
