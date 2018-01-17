@@ -100,4 +100,4 @@ private:
     std::atomic<bool> terminate_;
 };
 
-};
+}

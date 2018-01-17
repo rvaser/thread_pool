@@ -86,4 +86,4 @@ void ThreadPool::worker_thread(ThreadPool* thread_pool) {
     }
 }
 
-};
+}
