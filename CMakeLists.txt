@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -march=native")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(thread_pool_build_tests "Build thread_pool google tests" OFF)
+option(thread_pool_build_tests "Build thread_pool unit tests" OFF)
 
 add_library(thread_pool STATIC
     src/thread_pool.cpp)

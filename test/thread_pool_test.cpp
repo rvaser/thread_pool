@@ -23,7 +23,7 @@ public:
 
 TEST(ThreadPoolTest_, CreateThreadPoolError) {
     EXPECT_DEATH((thread_pool::createThreadPool(0)),
-        "thread_pool::createThreadPool error: invalid number of threads!");
+        ".thread_pool::createThreadPool. error: invalid number of threads!");
 }
 
 TEST_F(ThreadPoolTest, ParallelCalculation) {
