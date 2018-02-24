@@ -14,6 +14,7 @@
 #include <thread>
 #include <future>
 #include <atomic>
+#include <functional>
 #include <condition_variable>
 
 namespace thread_pool {
