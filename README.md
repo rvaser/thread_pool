@@ -1,5 +1,6 @@
 # Thread pool
 
+[![Latest GitHub release](https://img.shields.io/github/release/rvaser/thread_pool.svg)](https://github.com/rvaser/thread_pool/releases/latest)
 ![image](https://travis-ci.org/rvaser/thread_pool.svg?branch=master)
 
 A c++ thread pool implementation inspired by https://github.com/progschj/ThreadPool.
