@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <queue>
@@ -19,40 +19,42 @@
 
 namespace thread_pool {
 
+static const std::string version = "v2.0.0";
+
 class Semaphore;
-std::unique_ptr<Semaphore> createSemaphore(uint32_t value);
+std::unique_ptr<Semaphore> createSemaphore(std::uint32_t value);
 
 class ThreadPool;
-std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads =
+std::unique_ptr<ThreadPool> createThreadPool(std::uint32_t num_threads =
     std::thread::hardware_concurrency() / 2);
 
 class Semaphore {
 public:
     ~Semaphore() = default;
 
-    uint32_t value() const {
+    std::uint32_t value() const {
         return value_;
     }
 
     void wait();
     void post();
 
-    friend std::unique_ptr<Semaphore> createSemaphore(uint32_t value);
+    friend std::unique_ptr<Semaphore> createSemaphore(std::uint32_t value);
 private:
-    Semaphore(uint32_t value);
+    Semaphore(std::uint32_t value);
     Semaphore(const Semaphore&) = delete;
     const Semaphore& operator=(const Semaphore&) = delete;
 
     std::mutex mutex_;
     std::condition_variable condition_;
-    uint32_t value_;
+    std::uint32_t value_;
 };
 
 class ThreadPool {
 public:
     ~ThreadPool();
 
-    uint32_t num_threads() const {
+    std::uint32_t num_threads() const {
         return threads_.size();
     }
 
@@ -61,7 +63,7 @@ public:
     }
 
     template<typename T, typename... Ts>
-    auto submit_task(T&& routine, Ts&&... params)
+    auto submit(T&& routine, Ts&&... params)
         -> std::future<typename std::result_of<T(Ts...)>::type> {
 
         auto task = std::make_shared<std::packaged_task<typename std::result_of<T(Ts...)>::type()>>(
@@ -82,9 +84,9 @@ public:
         return task_result;
     }
 
-    friend std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads);
+    friend std::unique_ptr<ThreadPool> createThreadPool(std::uint32_t num_threads);
 private:
-    ThreadPool(uint32_t num_threads);
+    ThreadPool(std::uint32_t num_threads);
     ThreadPool(const ThreadPool&) = delete;
     const ThreadPool& operator=(const ThreadPool&) = delete;
 

@@ -29,7 +29,7 @@ make
 
 a library named libthread_pool.a will appear in `build/lib` directory. To link the library with your code, add `-Iinclude/ -Lbuild/lib -lthread_pool -lpthread --std=c++11` while compiling and include `thread_pool/thread_pool.hpp` in your desired source files. Optionally, you can run `sudo make install` to install thread_pool library to your machine which lets you exclude `-Iinclude/ -Lbuild/lib` while compiling.
 
-Alternatively, add the project to your CMakeLists.txt file with `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool pthread)` commands.
+Alternatively, add the project to your `CMakeLists.txt` file with `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool pthread)` commands.
 
 To build unit tests run `git submodule update --init` and add `-Dthread_pool_build_tests=ON` while running `cmake`. After installation, an executable named `thread_pool_test` will be created in `build/bin`.
 
@@ -56,11 +56,10 @@ std::shared_ptr<thread_pool::ThreadPool> thread_pool =
 
 // create storage for return values of function1 and function2
 std::vector<std::future<int>> thread_futures;
-for (int i = 0; i < num_tasks; ++i) {
+for (std::uint32_t i = 0; i < num_tasks; ++i) {
     // be sure to use std::ref() when passing references!
-    thread_futures.emplace_back(thread_pool->submit_task(function1,
-        std::ref(data), index, ...));
-    thread_futures.emplace_back(thread_pool->submit_task(function2, a, b));
+    thread_futures.emplace_back(thread_pool->submit(function1, std::ref(data), index, ...));
+    thread_futures.emplace_back(thread_pool->submit(function2, a, b));
 }
 
 // wait for threads to finish
@@ -71,8 +70,8 @@ for (auto& it: thread_futures) {
 
 // new set of tasks running function3
 std::vector<std::future<void>> thread_futures2;
-for (int i = 0; i < num_tasks2; ++i) {
-    thread_futures2.emplace_back(thread_pool->submit_task(function3));
+for (std::uint32_t i = 0; i < num_tasks2; ++i) {
+    thread_futures2.emplace_back(thread_pool->submit(function3));
 }
 for (auto& it2: thread_futures2) {
     it.wait();

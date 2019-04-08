@@ -4,26 +4,25 @@
  * @brief ThreadPool class source file
  */
 
-#include <stdlib.h>
+#include <exception>
 
 #include "thread_pool/thread_pool.hpp"
 
 namespace thread_pool {
 
-std::unique_ptr<Semaphore> createSemaphore(uint32_t value) {
+std::unique_ptr<Semaphore> createSemaphore(std::uint32_t value) {
     return std::unique_ptr<Semaphore>(new Semaphore(value));
 }
 
-std::unique_ptr<ThreadPool> createThreadPool(uint32_t num_threads) {
+std::unique_ptr<ThreadPool> createThreadPool(std::uint32_t num_threads) {
     if (num_threads == 0) {
-        fprintf(stderr, "[thread_pool::createThreadPool] error: "
+        throw std::invalid_argument("[thread_pool::createThreadPool] error: "
             "invalid number of threads!");
-        exit(1);
     }
     return std::unique_ptr<ThreadPool>(new ThreadPool(num_threads));
 }
 
-Semaphore::Semaphore(uint32_t value)
+Semaphore::Semaphore(std::uint32_t value)
         : value_(value) {
 }
 
@@ -39,13 +38,13 @@ void Semaphore::wait() {
     --value_;
 }
 
-ThreadPool::ThreadPool(uint32_t num_threads) {
+ThreadPool::ThreadPool(std::uint32_t num_threads) {
 
     queue_sem_ = createSemaphore(1);
     active_sem_ = createSemaphore(0);
 
     terminate_ = false;
-    for (uint32_t i = 0; i < num_threads; ++i) {
+    for (std::uint32_t i = 0; i < num_threads; ++i) {
         threads_.emplace_back(ThreadPool::worker_thread, this);
         thread_identifiers_.emplace_back(threads_.back().get_id());
     }
@@ -54,7 +53,7 @@ ThreadPool::ThreadPool(uint32_t num_threads) {
 ThreadPool::~ThreadPool() {
 
     terminate_ = true;
-    for (uint32_t i = 0; i < threads_.size(); ++i) {
+    for (std::uint32_t i = 0; i < threads_.size(); ++i) {
         active_sem_->post();
     }
     for (auto& it: threads_) {
