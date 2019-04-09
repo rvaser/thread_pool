@@ -32,4 +32,4 @@ if (thread_pool_build_tests)
     endif()
 
     target_link_libraries(thread_pool_test thread_pool gtest_main)
-endif(thread_pool_build_tests)
+endif()
