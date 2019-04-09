@@ -27,7 +27,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-a library named libthread_pool.a will appear in `build/lib` directory. Optionally, you can run `sudo make install` to install thread_pool library to your machine.
+a library named `libthread_pool.a` will appear in `build/lib` directory. Optionally, you can run `sudo make install` to install thread_pool library to your machine.
 
 Alternatively, add the project to your `CMakeLists.txt` file with `add_subdirectory(vendor/thread_pool EXCLUDE_FROM_ALL)` and `target_link_libraries(your_exe thread_pool pthread)` commands.
 
