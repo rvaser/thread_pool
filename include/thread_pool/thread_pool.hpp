@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <string>
 #include <queue>
 #include <mutex>
 #include <thread>
@@ -19,7 +20,7 @@
 
 namespace thread_pool {
 
-static const std::string version = "v2.0.0";
+static const std::string version = "v2.0.1";
 
 class Semaphore;
 std::unique_ptr<Semaphore> createSemaphore(std::uint32_t value);
