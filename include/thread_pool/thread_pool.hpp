@@ -20,7 +20,7 @@
 
 namespace thread_pool {
 
-static const std::string version = "v2.0.1";
+static const std::string version = "v2.0.2";
 
 class Semaphore;
 std::unique_ptr<Semaphore> createSemaphore(std::uint32_t value);
