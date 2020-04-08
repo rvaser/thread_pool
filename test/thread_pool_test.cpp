@@ -1,108 +1,66 @@
-/*!
- * @file thread_pool_test.cpp
- *
- * @brief Thread_pool unit test source file
- */
+// Copyright (c) 2020 Robert Vaser
 
+#include "thread_pool/thread_pool.hpp"
+
+#include <numeric>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "thread_pool/thread_pool.hpp"
 #include "gtest/gtest.h"
 
-class ThreadPoolTest: public ::testing::Test {
-public:
-    void SetUp() {
-        thread_pool = thread_pool::createThreadPool();
+namespace thread_pool {
+namespace test {
+
+TEST(ThreadPoolThreadPoolTest, Submit) {
+  std::function<std::uint32_t(std::uint32_t)> fibonacci =
+      [&fibonacci] (std::uint32_t i) -> std::uint32_t {
+    if (i == 1 || i == 2) {
+      return 1;
     }
+    return fibonacci(i - 1) + fibonacci(i - 2);
+  };
 
-    void TearDown() {}
+  ThreadPool tp{};
 
-    std::unique_ptr<thread_pool::ThreadPool> thread_pool;
-};
-
-TEST(ThreadPoolTest_, CreateThreadPoolError) {
-    try {
-        auto thread_pool = thread_pool::createThreadPool(0);
-    } catch (std::invalid_argument& exception) {
-        EXPECT_STREQ(exception.what(), "[thread_pool::createThreadPool] error: "
-            "invalid number of threads!");
-    }
+  std::vector<std::future<std::uint32_t>> f;
+  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+    f.emplace_back(tp.Submit(fibonacci, 42));
+  }
+  for (auto& it : f) {
+    EXPECT_EQ(267914296, it.get());
+  }
 }
 
-TEST_F(ThreadPoolTest, ParallelCalculation) {
+TEST(ThreadPoolThreadPoolTest, ThreadIds) {
+  ThreadPool tp{};
+  EXPECT_EQ(tp.num_threads(), tp.thread_ids().size());
 
-    std::vector<std::vector<std::uint32_t>> data(10);
-    for (auto& it: data) {
-        it.reserve(100000);
-        for (std::uint32_t i = 0; i < 100000; ++i) {
-            it.push_back(i);
-        }
-    }
+  Semaphore s{0}, b{0};
+  auto check = [&] () -> std::uint32_t {
+    EXPECT_EQ(1, tp.thread_ids().count(std::this_thread::get_id()));
+    s.Signal();
+    b.Wait();
+    return tp.thread_ids().at(std::this_thread::get_id());
+  };
 
-    auto do_some_calculation = [](std::vector<std::uint32_t>& src) -> void {
-        for (std::uint32_t i = 0; i < src.size() - 1; ++i) {
-            src[i] = (src[i] * src[i + 1]) / (src[i] - src[i + 1] * 3);
-        }
-    };
+  std::vector<std::future<std::uint32_t>> f;
+  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+    f.emplace_back(tp.Submit(check));
+  }
 
-    std::vector<std::future<void>> thread_futures;
-    for (std::uint32_t i = 0; i < data.size(); ++i) {
-        thread_futures.emplace_back(thread_pool->submit(do_some_calculation,
-            std::ref(data[i])));
-    }
+  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+    s.Wait();
+  }
+  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+    b.Signal();
+  }
 
-    for (const auto& it: thread_futures) {
-        it.wait();
-    }
+  std::unordered_set<std::uint32_t> ts;
+  for (auto& it : f) {
+    ts.emplace(it.get());
+  }
+  EXPECT_EQ(tp.num_threads(), ts.size());
 }
 
-TEST_F(ThreadPoolTest, ThreadIdentifiers) {
-
-    const auto& identifiers = thread_pool->thread_identifiers();
-    std::unordered_map<std::thread::id, std::uint32_t> thread_map;
-    std::uint32_t thread_id = 0;
-    for (const auto& it: identifiers) {
-        thread_map[it] = thread_id++;
-    }
-
-    EXPECT_EQ(thread_id, thread_map.size());
-
-    auto barrier = thread_pool::createSemaphore(0);
-    auto checkpoint = thread_pool::createSemaphore(0);
-    auto check_thread_id = [&barrier, &checkpoint](
-        std::unordered_map<std::thread::id, std::uint32_t>& thread_map) -> std::int32_t {
-
-        checkpoint->post();
-        barrier->wait();
-
-        if (thread_map.count(std::this_thread::get_id()) != 0) {
-            return thread_map[std::this_thread::get_id()];
-        }
-        return -1;
-    };
-
-    std::vector<std::future<std::int32_t>> thread_futures;
-    for (std::uint32_t i = 0; i < thread_id; ++i) {
-        thread_futures.emplace_back(thread_pool->submit(check_thread_id,
-            std::ref(thread_map)));
-    }
-
-    for (std::uint32_t i = 0; i < thread_id; ++i) {
-        checkpoint->wait();
-    }
-    for (std::uint32_t i = 0; i < thread_id; ++i) {
-        barrier->post();
-    }
-
-    std::unordered_set<std::int32_t> thread_identifiers;
-    for (auto& it: thread_futures) {
-        it.wait();
-        thread_identifiers.emplace(it.get());
-    }
-
-    EXPECT_EQ(thread_id, thread_identifiers.size());
-    for (std::uint32_t i = 0; i < thread_id; ++i) {
-        EXPECT_EQ(1U, thread_identifiers.count(i));
-    }
-}
+}  // namespace test
+}  // namespace thread_pool

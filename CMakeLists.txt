@@ -1,11 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
-project(thread_pool)
+cmake_minimum_required(VERSION 3.9)
 
-include(GNUInstallDirs)
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+project(thread_pool VERSION 3.0.0
+                    LANGUAGES CXX
+                    DESCRIPTION "ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_STANDARD 11)
@@ -13,28 +10,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
 find_package(Threads REQUIRED)
+add_library(${PROJECT_NAME} INTERFACE)
+target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads)
+
+target_include_directories(${PROJECT_NAME}
+  INTERFACE $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>)
 
 option(thread_pool_build_tests "Build thread_pool unit tests" OFF)
-
-add_library(thread_pool STATIC
-    src/thread_pool.cpp)
-
-target_link_libraries(thread_pool Threads::Threads)
-
-target_include_directories(thread_pool PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-install(TARGETS thread_pool DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/thread_pool DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 if (thread_pool_build_tests)
-    add_executable(thread_pool_test test/thread_pool_test.cpp)
-
-    if (NOT TARGET gtest_main)
-        add_subdirectory(vendor/googletest/googletest EXCLUDE_FROM_ALL)
-    endif()
-
-    target_link_libraries(thread_pool_test thread_pool gtest_main)
-endif()
+  find_package(GTest REQUIRED)
+  add_executable(${PROJECT_NAME}_test
+    test/semaphore_test.cpp
+    test/thread_pool_test.cpp)
+  target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} GTest::Main)
+endif ()
