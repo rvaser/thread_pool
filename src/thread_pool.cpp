@@ -5,6 +5,7 @@
  */
 
 #include <exception>
+#include <stdexcept>
 
 #include "thread_pool/thread_pool.hpp"
 
