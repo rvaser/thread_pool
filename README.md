@@ -1,7 +1,7 @@
 # Thread pool
 
 [![Latest GitHub release](https://img.shields.io/github/release/rvaser/thread_pool.svg)](https://github.com/rvaser/thread_pool/releases/latest)
-[![Build status for c++/clang++](https://travis-ci.org/rvaser/thread_pool.svg?branch=master)](https://travis-ci.org/rvaser/thread_pool)
+[![Build status for c++/clang++](https://travis-ci.com/rvaser/thread_pool.svg?branch=master)](https://travis-ci.com/rvaser/thread_pool)
 
 ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.
 
