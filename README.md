@@ -7,20 +7,40 @@ ThreadPool is a c++ header only library modifying and extending https://github.c
 
 ## Usage
 
-If you would like to add thread_pool to your project via CMake, add the following:
+To build thread_pool run the following commands:
+```bash
+git clone https://github.com/rvaser/thread_pool && cd thread_pool && mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. && make
+```
+which will create install targets and unit tests. Running `make install` will create a package on your system that can be searched and linked with:
+```cmake
+find_package(thread_pool)
+target_link_libraries(<target> thread_pool:thread_pool)
+```
+On the other hand, you can include thread_pool as a submodule and add it to your project with the following:
 ```cmake
 if (NOT TARGET thread_pool)
   add_subdirectory(<path_to_submodules>/thread_pool EXCLUDE_FROM_ALL)
 endif ()
-target_link_libraries(<your_exe> thread_pool)
+target_link_libraries(<target> thread_pool::thread_pool)
 ```
 
 If you are not using CMake, include the appropriate header file directly to your project and link with pthread.
 
+#### Build options
+
+- `thread_pool_install`: generate install target
+- `thread_pool_build_tests`: build unit tests
+
 #### Dependencies
 
-- gcc 4.8+ or clang 3.5+
-- (optional) cmake 3.9+
+- gcc 4.8+ | clang 3.5+
+- pthread
+- (optional) cmake 3.11+
+
+###### Hidden
+
+- (thread_pool_test) googletest 1.10.0
 
 ## Examples
 
@@ -38,7 +58,7 @@ auto lambda1 = [...] (...) -> void {
   ...
 };
 
-ThreadPool thread_pool{};
+thread_pool::ThreadPool thread_pool{};
 
 std::vector<std::future<int>> futures;
 for (...) {
@@ -58,20 +78,6 @@ for (const auto& it : void_futures) {
   it.wait();
 }
 ```
-
-## Unit tests
-
-To build and run thread_pool unit tests run the following commands:
-
-```bash
-git clone https://github.com/rvaser/thread_pool.git thread_pool
-cd thread_pool && mkdir build && cd build
-cmake -Dthread_pool_build_tests=ON -DCMAKE_BUILD_TYPE=Release .. && make
-./bin/thread_pool_test
-```
-
-#### Dependencies
-- gtest
 
 ## Acknowledgement
 

@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 
-project(thread_pool VERSION 3.0.2
+project(thread_pool VERSION 3.0.3
                     LANGUAGES CXX
                     DESCRIPTION "ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.")
+
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  set(thread_pool_main_project ON)
+endif ()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_STANDARD 11)
@@ -15,20 +19,72 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 find_package(Threads REQUIRED)
-add_library(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE
+
+add_library(thread_pool INTERFACE)
+add_library(${PROJECT_NAME}::thread_pool ALIAS thread_pool)
+
+target_include_directories(thread_pool INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(thread_pool INTERFACE
   Threads::Threads)
 
-target_include_directories(${PROJECT_NAME} INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+option(thread_pool_install "Generate install target" ${thread_pool_main_project})
+if (thread_pool_install)
+  include(GNUInstallDirs)
+  include(CMakePackageConfigHelpers)
 
-option(thread_pool_build_tests "Build thread_pool unit tests" OFF)
+  configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion)
+
+  install(
+    TARGETS thread_pool
+    EXPORT ${PROJECT_NAME}Targets)
+  install(
+    DIRECTORY include/thread_pool
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(
+    EXPORT ${PROJECT_NAME}Targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+endif ()
+
+option(thread_pool_build_tests "Build unit tests" ${thread_pool_main_project})
 if (thread_pool_build_tests)
-  find_package(GTest REQUIRED)
-  add_executable(${PROJECT_NAME}_test
+  find_package(GTest 1.10.0 QUIET)
+  if (NOT GTest_FOUND)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest
+      GIT_TAG release-1.10.0)
+
+    FetchContent_GetProperties(googletest)
+    if (NOT googletest_POPULATED)
+      FetchContent_Populate(googletest)
+      add_subdirectory(
+        ${googletest_SOURCE_DIR}
+        ${googletest_BINARY_DIR}
+        EXCLUDE_FROM_ALL)
+      add_library(GTest::Main ALIAS gtest_main)
+    endif ()
+  endif ()
+
+  add_executable(thread_pool_test
     test/semaphore_test.cpp
     test/thread_pool_test.cpp)
-  target_link_libraries(${PROJECT_NAME}_test
-    ${PROJECT_NAME}
+  target_link_libraries(thread_pool_test
+    thread_pool
     GTest::Main)
 endif ()
