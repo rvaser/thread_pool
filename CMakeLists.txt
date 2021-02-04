@@ -4,10 +4,6 @@ project(thread_pool VERSION 3.0.3
                     LANGUAGES CXX
                     DESCRIPTION "ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.")
 
-if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-  set(thread_pool_main_project ON)
-endif ()
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,7 +14,35 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  set(thread_pool_main_project ON)
+endif ()
+option(thread_pool_install "Generate install target" ${thread_pool_main_project})
+option(thread_pool_build_tests "Build unit tests" ${thread_pool_main_project})
+
 find_package(Threads REQUIRED)
+
+if (thread_pool_build_tests)
+  find_package(GTest 1.10.0 QUIET)
+  if (NOT GTest_FOUND)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest
+      GIT_TAG release-1.10.0)
+
+    FetchContent_GetProperties(googletest)
+    if (NOT googletest_POPULATED)
+      FetchContent_Populate(googletest)
+      add_subdirectory(
+        ${googletest_SOURCE_DIR}
+        ${googletest_BINARY_DIR}
+        EXCLUDE_FROM_ALL)
+      add_library(GTest::Main ALIAS gtest_main)
+    endif ()
+  endif ()
+endif ()
 
 add_library(thread_pool INTERFACE)
 add_library(${PROJECT_NAME}::thread_pool ALIAS thread_pool)
@@ -30,7 +54,6 @@ target_include_directories(thread_pool INTERFACE
 target_link_libraries(thread_pool INTERFACE
   Threads::Threads)
 
-option(thread_pool_install "Generate install target" ${thread_pool_main_project})
 if (thread_pool_install)
   include(GNUInstallDirs)
   include(CMakePackageConfigHelpers)
@@ -59,31 +82,11 @@ if (thread_pool_install)
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 endif ()
 
-option(thread_pool_build_tests "Build unit tests" ${thread_pool_main_project})
 if (thread_pool_build_tests)
-  find_package(GTest 1.10.0 QUIET)
-  if (NOT GTest_FOUND)
-    include(FetchContent)
-
-    FetchContent_Declare(
-      googletest
-      GIT_REPOSITORY https://github.com/google/googletest
-      GIT_TAG release-1.10.0)
-
-    FetchContent_GetProperties(googletest)
-    if (NOT googletest_POPULATED)
-      FetchContent_Populate(googletest)
-      add_subdirectory(
-        ${googletest_SOURCE_DIR}
-        ${googletest_BINARY_DIR}
-        EXCLUDE_FROM_ALL)
-      add_library(GTest::Main ALIAS gtest_main)
-    endif ()
-  endif ()
-
   add_executable(thread_pool_test
     test/semaphore_test.cpp
     test/thread_pool_test.cpp)
+
   target_link_libraries(thread_pool_test
     thread_pool
     GTest::Main)
