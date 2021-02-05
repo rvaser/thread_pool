@@ -40,7 +40,7 @@ If you are not using CMake, include the appropriate header file directly to your
 
 ###### Hidden
 
-- (thread_pool_test) googletest 1.10.0
+- (thread_pool_test) google/googletest 1.10.0
 
 ## Examples
 
