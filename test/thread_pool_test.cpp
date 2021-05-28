@@ -2,18 +2,14 @@
 
 #include "thread_pool/thread_pool.hpp"
 
-#include <numeric>
-#include <unordered_map>
-#include <unordered_set>
-
 #include "gtest/gtest.h"
 
 namespace thread_pool {
 namespace test {
 
 TEST(ThreadPoolThreadPoolTest, Submit) {
-  std::function<std::uint32_t(std::uint32_t)> fibonacci =
-      [&fibonacci] (std::uint32_t i) -> std::uint32_t {
+  std::function<std::size_t(std::size_t)> fibonacci =
+      [&fibonacci] (std::size_t i) -> std::size_t {
     if (i == 1 || i == 2) {
       return 1;
     }
@@ -22,8 +18,8 @@ TEST(ThreadPoolThreadPoolTest, Submit) {
 
   ThreadPool tp{};
 
-  std::vector<std::future<std::uint32_t>> f;
-  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+  std::vector<std::future<std::size_t>> f;
+  for (std::size_t i = 0; i < tp.num_threads(); ++i) {
     f.emplace_back(tp.Submit(fibonacci, 42));
   }
   for (auto& it : f) {
@@ -33,33 +29,50 @@ TEST(ThreadPoolThreadPoolTest, Submit) {
 
 TEST(ThreadPoolThreadPoolTest, ThreadIds) {
   ThreadPool tp{};
-  EXPECT_EQ(tp.num_threads(), tp.thread_ids().size());
+  EXPECT_EQ(tp.num_threads(), tp.thread_map().size());
 
-  Semaphore s{0}, b{0};
-  auto check = [&] () -> std::uint32_t {
-    EXPECT_EQ(1, tp.thread_ids().count(std::this_thread::get_id()));
-    s.Signal();
-    b.Wait();
-    return tp.thread_ids().at(std::this_thread::get_id());
+  struct Semaphore {
+   public:
+    void Wait() {
+      std::unique_lock<std::mutex> lock(mutex);
+      condition.wait(lock, [&] () -> std::size_t { return count; });
+      --count;
+    }
+
+    void Signal() {
+      std::unique_lock<std::mutex> lock(mutex);
+      ++count;
+      condition.notify_one();
+    }
+
+    std::mutex mutex;
+    std::condition_variable condition;
+    std::size_t count = 0;
   };
 
-  std::vector<std::future<std::uint32_t>> f;
-  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
+  std::vector<Semaphore> s(tp.num_threads());
+  std::vector<Semaphore> b(tp.num_threads());
+
+  auto check = [&] () -> void {
+    EXPECT_EQ(1, tp.thread_map().count(std::this_thread::get_id()));
+    auto i = tp.thread_map().at(std::this_thread::get_id());
+    s[i].Signal();
+    b[i].Wait();
+  };
+
+  std::vector<std::future<void>> f;
+  for (std::size_t i = 0; i < tp.num_threads(); ++i) {
     f.emplace_back(tp.Submit(check));
   }
-
-  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
-    s.Wait();
+  for (auto& it : s) {
+    it.Wait();
   }
-  for (std::uint32_t i = 0; i < tp.num_threads(); ++i) {
-    b.Signal();
+  for (auto& it : b) {
+    it.Signal();
   }
-
-  std::unordered_set<std::uint32_t> ts;
-  for (auto& it : f) {
-    ts.emplace(it.get());
+  for (const auto& it : f) {
+    it.wait();
   }
-  EXPECT_EQ(tp.num_threads(), ts.size());
 }
 
 }  // namespace test

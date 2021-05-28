@@ -1,38 +1,34 @@
 // Copyright (c) 2020 Robert Vaser
+// Combination of ThreadPool implementation by progschj and
+//   task stealing by Sean Parent
 
 #ifndef THREAD_POOL_THREAD_POOL_HPP_
 #define THREAD_POOL_THREAD_POOL_HPP_
 
 #include <algorithm>
 #include <atomic>
-#include <cstdint>
 #include <functional>
 #include <future>  // NOLINT
 #include <memory>
 #include <queue>
-#include <string>
 #include <thread>  // NOLINT
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "thread_pool/semaphore.hpp"
-
 namespace thread_pool {
 
 class ThreadPool {
  public:
-  ThreadPool(std::uint32_t num_threads = std::thread::hardware_concurrency() / 2)  // NOLINT
+  explicit ThreadPool(
+      std::size_t num_threads = std::thread::hardware_concurrency())
       : threads_(),
-        thread_ids_(),
-        thread_semaphore_(0),
-        queue_(),
-        queue_semaphore_(1),
-        terminate_(false) {
-    num_threads = std::max(1U, num_threads);
-    while (num_threads-- != 0) {
-      threads_.emplace_back(ThreadPool::Task, this);
-      thread_ids_.emplace(threads_.back().get_id(), threads_.size() - 1);
+        thread_map_(),
+        queues_(std::max(1UL, num_threads)),
+        task_id_(0) {
+    for (std::size_t i = 0; i != queues_.size(); ++i) {
+      threads_.emplace_back([this, i] () -> void { Task(i); });
+      thread_map_.emplace(threads_.back().get_id(), i);
     }
   }
 
@@ -43,21 +39,20 @@ class ThreadPool {
   ThreadPool& operator=(ThreadPool&&) = delete;
 
   ~ThreadPool() {
-    terminate_ = true;
-    for (std::uint32_t i = 0; i < threads_.size(); ++i) {
-      thread_semaphore_.Signal();
+    for (auto& it : queues_) {
+      it.Done();
     }
     for (auto& it : threads_) {
       it.join();
     }
   }
 
-  std::uint32_t num_threads() const {
+  std::size_t num_threads() const {
     return threads_.size();
   }
 
-  const std::unordered_map<std::thread::id, std::uint32_t>& thread_ids() const {
-    return thread_ids_;
+  const std::unordered_map<std::thread::id, std::size_t>& thread_map() const {
+    return thread_map_;
   }
 
   template<typename T, typename... Ts>
@@ -70,29 +65,32 @@ class ThreadPool {
       (*task)();
     };
 
-    queue_semaphore_.Wait();
-    queue_.emplace(task_wrapper);
-    queue_semaphore_.Signal();
+    auto task_id = task_id_++;
+    bool is_submitted = false;
+    for (std::size_t i = 0; i != queues_.size() * 42; ++i) {
+      if (queues_[(task_id + i) % queues_.size()].TryPush(task_wrapper)) {
+        is_submitted = true;
+        break;
+      }
+    }
+    if (!is_submitted) {
+      queues_[task_id % queues_.size()].Push(task_wrapper);
+    }
 
-    thread_semaphore_.Signal();
     return task_result;
   }
 
  private:
-  static void Task(ThreadPool* thread_pool) {
+  void Task(std::size_t thread_id) {
     while (true) {
-      thread_pool->thread_semaphore_.Wait();
+      std::function<void()> task;
 
-      if (thread_pool->terminate_) {
-        break;
+      for (std::size_t i = 0; i != queues_.size(); ++i) {
+        if (queues_[(thread_id + i) % queues_.size()].TryPop(&task)) {
+          break;
+        }
       }
-
-      thread_pool->queue_semaphore_.Wait();
-      auto task = std::move(thread_pool->queue_.front());
-      thread_pool->queue_.pop();
-      thread_pool->queue_semaphore_.Signal();
-
-      if (thread_pool->terminate_) {
+      if (!task && !queues_[thread_id].Pop(&task)) {
         break;
       }
 
@@ -100,12 +98,71 @@ class ThreadPool {
     }
   }
 
+  struct TaskQueue {
+   public:
+    template<typename F>
+    void Push(F&& f) {
+      {
+        std::unique_lock<std::mutex> lock(mutex);
+        queue.emplace(std::forward<F>(f));
+      }
+      is_ready.notify_one();
+    }
+
+    bool Pop(std::function<void()>* f) {
+      std::unique_lock<std::mutex> lock(mutex);
+      while (queue.empty() && !is_done) {
+        is_ready.wait(lock);
+      }
+      if (queue.empty()) {
+        return false;
+      }
+      *f = std::move(queue.front());
+      queue.pop();
+      return true;
+    }
+
+    template<typename F>
+    bool TryPush(F&& f) {
+      {
+        std::unique_lock<std::mutex> lock(mutex, std::try_to_lock);
+        if (!lock) {
+          return false;
+        }
+        queue.emplace(std::forward<F>(f));
+      }
+      is_ready.notify_one();
+      return true;
+    }
+
+    bool TryPop(std::function<void()>* f) {
+      std::unique_lock<std::mutex> lock(mutex, std::try_to_lock);
+      if (!lock || queue.empty()) {
+        return false;
+      }
+      *f = std::move(queue.front());
+      queue.pop();
+      return true;
+    }
+
+    void Done() {
+      {
+        std::unique_lock<std::mutex> lock(mutex);
+        is_done = true;
+      }
+      is_ready.notify_all();
+    }
+
+    std::queue<std::function<void()>> queue;
+    std::mutex mutex;
+    std::condition_variable is_ready;
+    bool is_done = false;
+  };
+
   std::vector<std::thread> threads_;
-  std::unordered_map<std::thread::id, std::uint32_t> thread_ids_;
-  Semaphore thread_semaphore_;
-  std::queue<std::function<void()>> queue_;
-  Semaphore queue_semaphore_;
-  std::atomic<bool> terminate_;
+  std::unordered_map<std::thread::id, std::size_t> thread_map_;
+  std::vector<TaskQueue> queues_;
+  std::atomic<std::size_t> task_id_;
 };
 
 }  // namespace thread_pool

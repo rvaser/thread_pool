@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(thread_pool VERSION 3.0.4
+project(thread_pool VERSION 4.0.0
                     LANGUAGES CXX
                     DESCRIPTION "ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.")
 
@@ -84,7 +84,6 @@ endif ()
 
 if (thread_pool_build_tests)
   add_executable(thread_pool_test
-    test/semaphore_test.cpp
     test/thread_pool_test.cpp)
 
   target_link_libraries(thread_pool_test
