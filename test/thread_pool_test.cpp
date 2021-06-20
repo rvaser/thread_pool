@@ -31,47 +31,16 @@ TEST(ThreadPoolThreadPoolTest, ThreadIds) {
   ThreadPool tp{};
   EXPECT_EQ(tp.num_threads(), tp.thread_map().size());
 
-  struct Semaphore {
-   public:
-    void Wait() {
-      std::unique_lock<std::mutex> lock(mutex);
-      condition.wait(lock, [&] () -> std::size_t { return count; });
-      --count;
-    }
-
-    void Signal() {
-      std::unique_lock<std::mutex> lock(mutex);
-      ++count;
-      condition.notify_one();
-    }
-
-    std::mutex mutex;
-    std::condition_variable condition;
-    std::size_t count = 0;
+  auto thread_id = [&] () -> std::size_t {
+    return tp.thread_map().count(std::this_thread::get_id());
   };
 
-  std::vector<Semaphore> s(tp.num_threads());
-  std::vector<Semaphore> b(tp.num_threads());
-
-  auto check = [&] () -> void {
-    EXPECT_EQ(1, tp.thread_map().count(std::this_thread::get_id()));
-    auto i = tp.thread_map().at(std::this_thread::get_id());
-    s[i].Signal();
-    b[i].Wait();
-  };
-
-  std::vector<std::future<void>> f;
-  for (std::size_t i = 0; i < tp.num_threads(); ++i) {
-    f.emplace_back(tp.Submit(check));
+  std::vector<std::future<size_t>> f;
+  for (std::size_t i = 0; i < tp.num_threads() * 42; ++i) {
+    f.emplace_back(tp.Submit(thread_id));
   }
-  for (auto& it : s) {
-    it.Wait();
-  }
-  for (auto& it : b) {
-    it.Signal();
-  }
-  for (const auto& it : f) {
-    it.wait();
+  for (auto& it : f) {
+    EXPECT_EQ(1, it.get());
   }
 }
 

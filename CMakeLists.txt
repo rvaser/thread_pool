@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 project(thread_pool VERSION 4.0.0
                     LANGUAGES CXX
-                    DESCRIPTION "ThreadPool is a c++ header only library modifying and extending https://github.com/progschj/ThreadPool.")
+                    DESCRIPTION "ThreadPool is a c++ header only library combining https://github.com/progschj/ThreadPool and task stealing by Sean Parent.")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_STANDARD 11)
