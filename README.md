@@ -1,7 +1,7 @@
 # Thread pool
 
 [![Latest GitHub release](https://img.shields.io/github/release/rvaser/thread_pool.svg)](https://github.com/rvaser/thread_pool/releases/latest)
-[![Build status for c++/clang++](https://travis-ci.com/rvaser/thread_pool.svg?branch=master)](https://travis-ci.com/rvaser/thread_pool)
+![Build status for gcc/clang](https://github.com/rvaser/thread_pool/actions/workflows/thread_pool.yml/badge.svg)
 
 ThreadPool is a c++ header only library combining https://github.com/progschj/ThreadPool and task stealing by Sean Parent.
 

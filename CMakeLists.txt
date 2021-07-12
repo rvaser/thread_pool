@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(thread_pool VERSION 4.0.0
+project(thread_pool VERSION 4.0.1
                     LANGUAGES CXX
                     DESCRIPTION "ThreadPool is a c++ header only library combining https://github.com/progschj/ThreadPool and task stealing by Sean Parent.")
 
