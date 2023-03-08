@@ -24,7 +24,7 @@ class ThreadPool {
       std::size_t num_threads = std::thread::hardware_concurrency())
       : threads_(),
         thread_map_(),
-        queues_(std::max(1UL, num_threads)),
+        queues_(std::max(size_t(1), num_threads)),
         task_id_(0) {
     for (std::size_t i = 0; i != queues_.size(); ++i) {
       threads_.emplace_back([this, i] () -> void { Task(i); });
