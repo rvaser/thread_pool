@@ -57,8 +57,15 @@ class ThreadPool {
 
   template<typename T, typename... Ts>
   auto Submit(T&& routine, Ts&&... params)
+    // C++17 deprecates std::result_of in favor of std::invoke_result and std::invoke_result_t.
+    // C++20 removes it completely.
+#if __cplusplus >= 201703L
+      -> std::future<typename std::invoke_result_t<T, Ts...>> {
+    auto task = std::make_shared<std::packaged_task<typename std::invoke_result_t<T, Ts...>()>>(  // NOLINT
+#else
       -> std::future<typename std::result_of<T(Ts...)>::type> {
     auto task = std::make_shared<std::packaged_task<typename std::result_of<T(Ts...)>::type()>>(  // NOLINT
+#endif
         std::bind(std::forward<T>(routine), std::forward<Ts>(params)...));
     auto task_result = task->get_future();
     auto task_wrapper = [task] () {
